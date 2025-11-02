@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EcoServe Deposit</title>
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Deposit at {{ box.name }}</h1>
+    <form id="depForm">
+      <input type="hidden" name="drop_box_id" value="{{ box.id }}">
+      <label>Item Type</label>
+      <select name="item_type_id">
+        {% for it in items %}
+        <option value="{{ it.id }}">{{ it.name }} ({{ it.credit_per_unit }} credits/{{ it.unit }})</option>
+        {% endfor %}
+      </select>
+      <label>Quantity</label>
+      <input type="number" min="1" name="qty" value="1">
+      <label>Your User ID</label>
+      <input type="number" name="user_id" placeholder="(temp: enter your id after OTP verify)">
+      <button type="submit">Submit Deposit</button>
+    </form>
+    <pre id="out"></pre>
+  </div>
+  <script>
+    document.getElementById('depForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = new FormData(e.target);
+      const resp = await fetch('/api/deposits', { method: 'POST', body: data });
+      const json = await resp.json();
+      document.getElementById('out').textContent = JSON.stringify(json, null, 2);
+    });
+  </script>
+</body>
+</html>

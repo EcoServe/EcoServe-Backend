@@ -1,0 +1,10 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+flask-limiter
+flask-cors
+redis
+psycopg2-binary
+rq
+gunicorn

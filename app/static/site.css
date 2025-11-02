@@ -1,0 +1,5 @@
+body{font-family:system-ui,Arial,sans-serif;background:#0f0f12;color:#eee}
+.container{max-width:640px;margin:40px auto;padding:20px;background:#1b1b22;border-radius:12px}
+label{display:block;margin-top:12px}
+input,select,button{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #333;background:#15151b;color:#eee}
+button{cursor:pointer}

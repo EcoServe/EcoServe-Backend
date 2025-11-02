@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: ecoserve
+      POSTGRES_PASSWORD: ecoserve
+      POSTGRES_DB: ecoserve
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecoserve -d ecoserve"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7
+    restart: always
+
+  web:
+    build: .
+    restart: always
+    env_file: [.env]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "5000:5000"
+    command: ["python", "run.py"]
+
+    # in docker-compose.yml, add:
+  worker:
+    build: .
+    env_file: [.env]
+    depends_on:
+      redis:
+        condition: service_started
+    command: ["rq", "worker", "-u", "${REDIS_URL}", "default"]
+
+
+volumes:
+  pgdata:
