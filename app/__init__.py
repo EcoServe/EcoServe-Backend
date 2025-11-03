@@ -36,6 +36,15 @@ def create_app():
     @app.get("/healthz")
     def healthz():
         return {"ok": True}
+    
+    @app.get("/dbcheck")
+    def dbcheck():
+        try:
+            db.session.execute(db.text("SELECT 1"))
+            return {"db": "ok"}
+        except Exception as e:
+            return {"db": "error", "detail": str(e)}, 500
+
 
     from .auth.routes import bp as auth_bp
     from .deposits.routes import bp as deposits_bp
