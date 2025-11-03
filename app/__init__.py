@@ -1,16 +1,19 @@
 # app/__init__.py
 import os
-import re
 from flask import Flask
 from .extensions import db, migrate, login_manager, limiter
 
 def create_app():
     app = Flask(__name__, static_folder="static", template_folder="templates")
 
-    # Read DATABASE_URL from env and normalize scheme for SQLAlchemy + psycopg2
+    # --- FIX: normalize DATABASE_URL for SQLAlchemy + psycopg2 and add SSL ---
     raw_db_url = os.getenv("DATABASE_URL", "")
     if raw_db_url.startswith("postgres://"):
         raw_db_url = raw_db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    # add sslmode=require if not present
+    if raw_db_url and "sslmode=" not in raw_db_url:
+        sep = "&" if "?" in raw_db_url else "?"
+        raw_db_url = f"{raw_db_url}{sep}sslmode=require"
 
     app.config.from_mapping(
         SECRET_KEY=os.getenv("SECRET_KEY", "dev"),
@@ -22,6 +25,7 @@ def create_app():
         WTF_CSRF_TIME_LIMIT=None,
         RATELIMIT_STORAGE_URI=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
     )
+    # -------------------------------------------------------------------------
 
     db.init_app(app)
     migrate.init_app(app, db)
