@@ -9,5 +9,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Use Gunicorn for production serving
-CMD ["gunicorn","run:app", "-b","0.0.0.0:5000", "--workers=1", "--threads=2", "--timeout=120", "--max-requests=200", "--max-requests-jitter=50", "--log-level","debug", "--error-logfile","-", "--access-logfile","-", "--capture-output"]
+CMD ["python","run.py"]
+
 
