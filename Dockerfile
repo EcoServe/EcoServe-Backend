@@ -8,7 +8,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Run with Gunicorn (lightweight production server)
-CMD ["gunicorn", "run:app", "-b", "0.0.0.0:5000",
-     "--workers=2", "--threads=2", "--timeout=60",
-     "--max-requests=200", "--max-requests-jitter=50"]
+# Use Gunicorn for production serving
+CMD ["gunicorn", "run:app", "-b", "0.0.0.0:5000", "--workers=2", "--threads=2", "--timeout=60", "--max-requests=200", "--max-requests-jitter=50"]
