@@ -1,37 +1,38 @@
 # app/__init__.py
 import os
+import re
 from flask import Flask
-from flask_cors import CORS
 from .extensions import db, migrate, login_manager, limiter
 
 def create_app():
     app = Flask(__name__, static_folder="static", template_folder="templates")
-    CORS(app)
 
+    # Read DATABASE_URL from env and normalize scheme for SQLAlchemy + psycopg2
+    raw_db_url = os.getenv("DATABASE_URL", "")
+    if raw_db_url.startswith("postgres://"):
+        raw_db_url = raw_db_url.replace("postgres://", "postgresql+psycopg2://", 1)
 
     app.config.from_mapping(
         SECRET_KEY=os.getenv("SECRET_KEY", "dev"),
-        SQLALCHEMY_DATABASE_URI=os.getenv("DATABASE_URL"),
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,           # ← important
+        SQLALCHEMY_DATABASE_URI=raw_db_url,
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SESSION_COOKIE_SAMESITE="Strict",
         SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SECURE=False,                    # set True in prod behind HTTPS
+        SESSION_COOKIE_SECURE=False,
         WTF_CSRF_TIME_LIMIT=None,
-        RATELIMIT_STORAGE_URI=os.getenv("REDIS_URL", "memory://"),  # ← rate-limit storage
+        RATELIMIT_STORAGE_URI=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
     )
 
-    # init extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-    login_manager.login_view = "auth.login"            # change to your real login endpoint
+    login_manager.login_view = "auth.login"
     limiter.init_app(app)
 
     @app.get("/healthz")
     def healthz():
         return {"ok": True}
 
-    # import after app is created to avoid circular imports
     from .auth.routes import bp as auth_bp
     from .deposits.routes import bp as deposits_bp
     from .admin.routes import bp as admin_bp
@@ -47,5 +48,5 @@ def create_app():
     @app.route("/")
     def index():
         return "🚀 Ecoserve backend is running successfully!"
-    
+
     return app
