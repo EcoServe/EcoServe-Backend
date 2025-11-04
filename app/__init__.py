@@ -3,14 +3,17 @@ import os
 from flask import Flask
 from .extensions import db, migrate, login_manager, limiter
 
+# ✅ add these imports
+from flask_cors import CORS
+from sqlalchemy import text
+
 def create_app():
     app = Flask(__name__, static_folder="static", template_folder="templates")
 
-    # --- FIX: normalize DATABASE_URL for SQLAlchemy + psycopg2 and add SSL ---
+    # --- normalize DATABASE_URL + force SSL ---
     raw_db_url = os.getenv("DATABASE_URL", "")
     if raw_db_url.startswith("postgres://"):
         raw_db_url = raw_db_url.replace("postgres://", "postgresql+psycopg2://", 1)
-    # add sslmode=require if not present
     if raw_db_url and "sslmode=" not in raw_db_url:
         sep = "&" if "?" in raw_db_url else "?"
         raw_db_url = f"{raw_db_url}{sep}sslmode=require"
@@ -25,8 +28,17 @@ def create_app():
         WTF_CSRF_TIME_LIMIT=None,
         RATELIMIT_STORAGE_URI=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
     )
-    # -------------------------------------------------------------------------
 
+    # ✅ enable CORS for your Vercel site (replace with your real URL)
+    CORS(
+        app,
+        resources={r"/*": {"origins": [
+            "https://eco-serve-frontend.vercel.app",
+            "http://localhost:3000"  # optional for local testing
+        ]}}
+    )
+
+    # init extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
@@ -36,16 +48,17 @@ def create_app():
     @app.get("/healthz")
     def healthz():
         return {"ok": True}
-    
+
+    # ✅ use sqlalchemy.text for /dbcheck
     @app.get("/dbcheck")
     def dbcheck():
         try:
-            db.session.execute(db.text("SELECT 1"))
+            db.session.execute(text("SELECT 1"))
             return {"db": "ok"}
         except Exception as e:
             return {"db": "error", "detail": str(e)}, 500
 
-
+    # blueprints
     from .auth.routes import bp as auth_bp
     from .deposits.routes import bp as deposits_bp
     from .admin.routes import bp as admin_bp
