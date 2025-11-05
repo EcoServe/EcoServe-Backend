@@ -74,5 +74,25 @@ def create_app():
     @app.route("/")
     def index():
         return "🚀 Ecoserve backend is running successfully!"
+    
+    # ---------------------------------------------------------------------
+    # DEBUG: list all routes
+    @app.get("/__routes")
+    def __routes():
+        out = []
+        for r in app.url_map.iter_rules():
+            methods = ",".join(sorted(m for m in r.methods if m not in ("HEAD", "OPTIONS")))
+            out.append({"rule": str(r), "endpoint": r.endpoint, "methods": methods})
+        return {"routes": out}
 
+    # DEBUG: quick DB test
+    @app.get("/__dbtest")
+    def __dbtest():
+        try:
+            db.session.execute(text("SELECT 1"))
+            return {"db": "ok"}
+        except Exception as e:
+            return {"db": "error", "detail": str(e)}, 500
+    # ---------------------------------------------------------------------
+    
     return app
