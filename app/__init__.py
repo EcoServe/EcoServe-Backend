@@ -71,6 +71,47 @@ def create_app():
     app.register_blueprint(rewards_bp, url_prefix="/api")
     app.register_blueprint(pickups_bp, url_prefix="/api")
 
+        # ---------------------------------------------------------------------
+    # Frontend compatibility aliases (map older/different paths to real ones)
+    # Add these *after* blueprints are registered.
+
+    def _alias(url_rule: str, target_endpoint: str, methods: list[str]):
+        """
+        Reuse an existing view function (by endpoint name) under another URL.
+        Example target_endpoint values you can see in /__routes output, e.g.
+        'deposits.create_deposit', 'rewards.list_rewards', etc.
+        """
+        app.add_url_rule(
+            url_rule,
+            endpoint=f"alias:{url_rule}",
+            view_func=app.view_functions[target_endpoint],
+            methods=methods,
+        )
+
+    # If frontend posts to /api/deposit, send it to real POST /api/deposits
+    _alias("/api/deposit", "deposits.create_deposit", ["POST"])
+
+    # If frontend expects /api/reward/list or /api/rewards/list → GET /api/rewards
+    _alias("/api/reward/list", "rewards.list_rewards", ["GET"])
+    _alias("/api/rewards/list", "rewards.list_rewards", ["GET"])
+
+    # If frontend posts to /api/reward/redeem → real POST /api/redeem
+    _alias("/api/reward/redeem", "rewards.redeem", ["POST"])
+
+    # If frontend uses /api/pickup/list → real GET /api/pickups
+    _alias("/api/pickup/list", "pickups.list_pickups", ["GET"])
+
+    # If frontend uses /api/pickup/update/<bid> (PUT) → real PUT /api/pickups/<bid>
+    _alias("/api/pickup/update/<int:bid>", "pickups.update_pickup", ["PUT"])
+
+    # If frontend uses /api/login → real POST /api/auth/otp
+    _alias("/api/login", "auth.otp", ["POST"])
+
+    # If frontend uses /api/verify → real POST /api/auth/verify
+    _alias("/api/verify", "auth.verify", ["POST"])
+    # ---------------------------------------------------------------------
+
+
     @app.route("/")
     def index():
         return "🚀 Ecoserve backend is running successfully!"
