@@ -18,5 +18,5 @@ def create_deposit():
     drop_box_id = int(data.get("drop_box_id"))
     item_type_id = int(data.get("item_type_id"))
     qty = int(data.get("qty"))
-    dep, credits = add_deposit(user_id, drop_box_id, item_type_id, qty)
+    dep, credits = add_deposit(user_id, drop_box_id)
     return {"id": dep.id, "credits_awarded": credits}
